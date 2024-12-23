@@ -1,4 +1,4 @@
-module httpcache
+module github.com/aburan28/httpcache
 
 go 1.23.3
 
