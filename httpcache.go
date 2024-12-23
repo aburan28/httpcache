@@ -3,15 +3,14 @@
 //
 // It is only suitable for use as a 'private' cache (i.e. for a web-browser or an API-client
 // and not for a shared proxy).
-//
 package httpcache
 
 import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"strings"
@@ -142,6 +141,11 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	var cachedResp *http.Response
 	if cacheable {
 		cachedResp, err = CachedResponse(t.Cache, req)
+
+		if err != nil {
+			return nil, err
+		}
+
 	} else {
 		// Need to invalidate an existing value
 		t.Cache.Delete(cacheKey)
@@ -151,17 +155,17 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	if transport == nil {
 		transport = http.DefaultTransport
 	}
-
 	if cacheable && cachedResp != nil && err == nil {
 		if t.MarkCachedResponses {
 			cachedResp.Header.Set(XFromCache, "1")
 		}
-
 		if varyMatches(cachedResp, req) {
 			// Can only use cached value if the new request doesn't Vary significantly
 			freshness := getFreshness(cachedResp.Header, req.Header)
+
 			if freshness == fresh {
 				return cachedResp, nil
+
 			}
 
 			if freshness == stale {
@@ -184,7 +188,6 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				}
 			}
 		}
-
 		resp, err = transport.RoundTrip(req)
 		if err == nil && req.Method == "GET" && resp.StatusCode == http.StatusNotModified {
 			// Replace the 304 response with the one from cache, but update with some new headers
@@ -229,18 +232,19 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		}
 		switch req.Method {
 		case "GET":
-			// Delay caching until EOF is reached.
-			resp.Body = &cachingReadCloser{
-				R: resp.Body,
-				OnEOF: func(r io.Reader) {
-					resp := *resp
-					resp.Body = ioutil.NopCloser(r)
-					respBytes, err := httputil.DumpResponse(&resp, true)
-					if err == nil {
-						t.Cache.Set(cacheKey, respBytes)
-					}
-				},
+
+			resp := *resp
+			resp.Body = io.NopCloser(resp.Body)
+
+			respBytes, err := httputil.DumpResponse(&resp, true)
+
+			if err == nil {
+				t.Cache.Set(cacheKey, respBytes)
 			}
+			if err != nil {
+				fmt.Println("error caching the get request", err)
+			}
+
 		default:
 			respBytes, err := httputil.DumpResponse(resp, true)
 			if err == nil {
