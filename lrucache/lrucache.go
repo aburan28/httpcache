@@ -11,6 +11,10 @@ type LRUCache struct {
 	cache *lru.Cache[string, []byte]
 }
 
+type Config struct {
+	Size int
+}
+
 // NewLRUCache creates a new LRUCache with the specified size
 func NewLRUCache(size int) *LRUCache {
 	c, err := lru.New[string, []byte](size)
