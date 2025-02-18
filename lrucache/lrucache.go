@@ -29,7 +29,7 @@ func (c *LRUCache) Size() int {
 // Get retrieves a value from the cache
 func (c *LRUCache) Get(key string) ([]byte, bool) {
 	value, ok := c.cache.Get(key)
-	fmt.Println("caching: ", key)
+	fmt.Println("cache hit: ", key)
 	fmt.Println("cache size", c.Size())
 	return value, ok
 }
