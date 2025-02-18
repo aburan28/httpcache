@@ -29,15 +29,16 @@ func (c *LRUCache) Size() int {
 // Get retrieves a value from the cache
 func (c *LRUCache) Get(key string) ([]byte, bool) {
 	value, ok := c.cache.Get(key)
-	fmt.Println("value", value)
+	fmt.Println("caching: ", key)
+	fmt.Println("cache size", c.Size())
 	return value, ok
 }
 
 // Set adds a value to the cache
 func (c *LRUCache) Set(key string, value []byte) {
 	c.cache.Add(key, value)
-	fmt.Println("value", value)
-	fmt.Println(c.Size())
+	fmt.Println("caching: ", key)
+	fmt.Println("cache size", c.Size())
 }
 
 // Delete removes a value from the cache
