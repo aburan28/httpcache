@@ -9,6 +9,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httputil"
@@ -239,6 +240,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 					respBytes, err := httputil.DumpResponse(&resp, true)
 					if err == nil {
 						t.Cache.Set(cacheKey, respBytes)
+						fmt.Println("GET")
 					}
 				},
 			}
@@ -248,6 +250,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			respBytes, err := httputil.DumpResponse(resp, true)
 			if err == nil {
 				t.Cache.Set(cacheKey, respBytes)
+				fmt.Println(req.Method)
 			}
 		}
 	} else {
